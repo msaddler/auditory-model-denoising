@@ -29,6 +29,10 @@ def build_network(tensor_input, list_layer_dict, n_classes_dict={}):
             layer = tf.keras.layers.LeakyReLU(**layer_dict['args'])
         elif 'relu' in layer_type:
             layer = tf.keras.layers.ReLU(**layer_dict['args'])
+        elif 'multi_fc_top' in layer_type:
+            layer = LegacyDenseTaskHeads(
+                n_classes_dict=n_classes_dict,
+                **layer_dict['args'])
         elif 'fc_top' in layer_type:
             layer = DenseTaskHeads(
                 n_classes_dict=n_classes_dict,
@@ -167,6 +171,23 @@ def DenseTaskHeads(n_classes_dict={}, name='logits', **kwargs):
                 classification_name = '{}_{}'.format(name, key)
             else:
                 classification_name = name
+            classification_layer = tf.keras.layers.Dense(
+                units=n_classes_dict[key],
+                name=classification_name,
+                **kwargs)
+            tensors_logits[key] = classification_layer(tensor_input)
+        return tensors_logits
+    return layer
+
+
+def LegacyDenseTaskHeads(n_classes_dict={}, name='logits', **kwargs):
+    """
+    Legacy code
+    """
+    def layer(tensor_input):
+        tensors_logits = {}
+        for idx, key in enumerate(sorted(n_classes_dict.keys())):
+            classification_name = '{}_{}'.format(name, idx)
             classification_layer = tf.keras.layers.Dense(
                 units=n_classes_dict[key],
                 name=classification_name,
