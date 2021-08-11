@@ -16,6 +16,18 @@ class AuditoryModelLoss():
                  fn_weights='deep_feature_loss_weights.json',
                  config_cochlear_model={}):
         """
+        The AuditoryModelLoss class creates an object to measure distances between
+        auditory model representations of sounds.
+        
+        Args
+        ----
+        dir_recognition_networks (str): directory containing recognition network architectures
+            and model checkpoints
+        list_recognition_networks (list or None): list of recognition network keys specifying
+            the deep feature loss (if None, use all checkpoints in `dir_recognition_networks`)
+        fn_weights (str): filename for deep feature loss weights, which weight the contribution
+            of each recognition network layer to the total deep feature loss weight
+        config_cochlear_model (dict): parameters for util_cochlear_model.build_cochlear_model
         """
         if not os.path.isabs(fn_weights):
             fn_weights = os.path.join(dir_recognition_networks, fn_weights)
@@ -33,7 +45,6 @@ class AuditoryModelLoss():
                 msg = "Failed to find exactly 1 checkpoint for recognition network {}".format(network_key)
                 assert len(tmp) == 1, msg
                 list_fn_ckpt.append(tmp[0].replace('.index', ''))
-
         print("{} recognition networks included for deep feature loss:".format(len(list_fn_ckpt)))
         config_recognition_networks = {}
         for fn_ckpt in list_fn_ckpt:
@@ -58,6 +69,7 @@ class AuditoryModelLoss():
 
     def l1_distance(self, feature0, feature1):
         """
+        Computes L1 distance between two features (preserving axis 0 for batch)
         """
         axis = np.arange(1, len(feature0.get_shape().as_list()))
         return tf.reduce_sum(tf.math.abs(feature0 - feature1), axis=axis)
@@ -65,6 +77,11 @@ class AuditoryModelLoss():
 
     def build_auditory_model(self, dtype=tf.float32):
         """
+        Constructs the full auditory model and losses. This function builds two
+        waveform placeholders and constructs two identical auditory models operating
+        on the two placeholders. Waveform, cochlear model, and deep feature losses are
+        computed by measuring distances between identical stages of the two auditory
+        models.
         """
         # Build placeholders for two waveforms and compute waveform loss
         self.tensor_wave0 = tf.placeholder(dtype, [None, 40000])
@@ -123,6 +140,10 @@ class AuditoryModelLoss():
 
 
     def load_auditory_model_vars(self, sess):
+        """
+        Loads the same variables into the two copies of each recognition network
+        from recognition network checkpoints.
+        """
         self.sess = sess
         for network_key in sorted(self.config_recognition_networks.keys()):
             fn_ckpt = self.config_recognition_networks[network_key]['fn_ckpt']
@@ -135,18 +156,57 @@ class AuditoryModelLoss():
 
 
     def waveform_loss(self, y0, y1):
+        """
+        Method to compute waveform loss between two waveforms under
+        the constructed auditory model.
+        
+        Args
+        ----
+        y0 (np.ndarray): waveform with shape [batch, 40000]
+        y1 (np.ndarray): waveform with shape [batch, 40000]
+        
+        Returns
+        -------
+        (np.ndarray): L1 waveform loss with shape [batch]
+        """
         assert (self.sess is not None) and (not self.sess._closed)
         feed_dict={self.tensor_wave0: y0, self.tensor_wave1: y1}
         return self.sess.run(self.loss_waveform, feed_dict=feed_dict)
 
 
     def cochlear_model_loss(self, y0, y1):
+        """
+        Method to compute cochlear model loss between two waveforms
+        under the constructed auditory model.
+        
+        Args
+        ----
+        y0 (np.ndarray): waveform with shape [batch, 40000]
+        y1 (np.ndarray): waveform with shape [batch, 40000]
+        
+        Returns
+        -------
+        (np.ndarray): L1 cochlear model loss with shape [batch]
+        """
         assert (self.sess is not None) and (not self.sess._closed)
         feed_dict={self.tensor_wave0: y0, self.tensor_wave1: y1}
         return self.sess.run(self.loss_cochlear_model, feed_dict=feed_dict)
 
 
     def deep_feature_loss(self, y0, y1):
+        """
+        Method to compute deep feature loss between two waveforms
+        under the constructed auditory model.
+        
+        Args
+        ----
+        y0 (np.ndarray): waveform with shape [batch, 40000]
+        y1 (np.ndarray): waveform with shape [batch, 40000]
+        
+        Returns
+        -------
+        (np.ndarray): L1 deep feature loss with shape [batch]
+        """
         assert (self.sess is not None) and (not self.sess._closed)
         if not self.vars_loaded:
             print(("WARNING: `deep_feature_loss` called before loading vars"))
