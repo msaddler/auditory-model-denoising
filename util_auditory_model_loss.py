@@ -12,14 +12,29 @@ import util_cochlear_model
 class AuditoryModelLoss():
     def __init__(self,
                  dir_recognition_networks='models/recognition_networks',
+                 list_recognition_networks=None,
+                 fn_weights='deep_feature_loss_weights.json',
                  config_cochlear_model={}):
         """
         """
-        fn_weights = os.path.join(dir_recognition_networks, 'deep_feature_loss_weights.json')
+        if not os.path.isabs(fn_weights):
+            fn_weights = os.path.join(dir_recognition_networks, fn_weights)
         with open(fn_weights, 'r') as f_weights:
             deep_feature_loss_weights = json.load(f_weights)
-        list_fn_ckpt = glob.glob(os.path.join(dir_recognition_networks, 'arch1*ckpt*index'))
-        list_fn_ckpt = [fn_ckpt.replace('.index', '') for fn_ckpt in list_fn_ckpt]
+        if list_recognition_networks is None:
+            print(("`list_recognition_networks` not specified --> "
+                   "searching for all checkpoints in {}".format(dir_recognition_networks)))
+            list_fn_ckpt = glob.glob(os.path.join(dir_recognition_networks, '*index'))
+            list_fn_ckpt = [fn_ckpt.replace('.index', '') for fn_ckpt in list_fn_ckpt]
+        else:
+            list_fn_ckpt = []
+            for network_key in list_recognition_networks: 
+                tmp = glob.glob(os.path.join(dir_recognition_networks, '{}*index'.format(network_key)))
+                msg = "Failed to find exactly 1 checkpoint for recognition network {}".format(network_key)
+                assert len(tmp) == 1, msg
+                list_fn_ckpt.append(tmp[0].replace('.index', ''))
+
+        print("{} recognition networks included for deep feature loss:".format(len(list_fn_ckpt)))
         config_recognition_networks = {}
         for fn_ckpt in list_fn_ckpt:
             network_key = os.path.basename(fn_ckpt).split('.')[0]
@@ -33,6 +48,7 @@ class AuditoryModelLoss():
                 'n_classes_dict': n_classes_dict,
                 'weights': deep_feature_loss_weights[network_key],
             }
+            print('|__ {}: {}'.format(network_key, fn_ckpt))
         self.config_recognition_networks = config_recognition_networks
         self.config_cochlear_model = config_cochlear_model
         self.build_auditory_model()
@@ -56,18 +72,19 @@ class AuditoryModelLoss():
         print('Building waveform loss')
         self.loss_waveform = self.l1_distance(self.tensor_wave0, self.tensor_wave1)
         # Build cochlear model for each waveform and compute cochlear model loss
+        print('Building cochlear model loss')
         tensor_coch0, _ = util_cochlear_model.build_cochlear_model(
             self.tensor_wave0,
             **self.config_cochlear_model)
         tensor_coch1, _ = util_cochlear_model.build_cochlear_model(
             self.tensor_wave1,
             **self.config_cochlear_model)
-        print('Building cochlear model loss')
         self.loss_cochlear_model = self.l1_distance(tensor_coch0, tensor_coch1)
         # Build network(s) for each waveform and compute deep feature losses
         self.loss_deep_features_dict = {}
         self.loss_deep_features = tf.zeros([], dtype=dtype)
         for network_key in sorted(self.config_recognition_networks.keys()):
+            print('Building deep feature loss (recognition network: {})'.format(network_key))
             with open(self.config_recognition_networks[network_key]['fn_arch'], 'r') as f:
                 list_layer_dict = json.load(f)
             # Build network for stimulus 0
@@ -97,7 +114,6 @@ class AuditoryModelLoss():
                     var_list=var_list,
                     max_to_keep=0)
             # Compute deep feature losses (weighted sum across layers)
-            print('Building deep feature loss (recognition network: {})'.format(network_key))
             self.loss_deep_features_dict[network_key] = tf.zeros([], dtype=dtype)
             layer_weights = self.config_recognition_networks[network_key]['weights']
             for layer_key in sorted(layer_weights.keys()):
@@ -136,4 +152,3 @@ class AuditoryModelLoss():
             print(("WARNING: `deep_feature_loss` called before loading vars"))
         feed_dict={self.tensor_wave0: y0, self.tensor_wave1: y1}
         return self.sess.run(self.loss_deep_features, feed_dict=feed_dict)
-
