@@ -1,3 +1,15 @@
+"""
+This script is closely based on pycochleagram and tfcochleagram,
+which have been previously released:
+
+    https://github.com/mcdermottLab/pycochleagram
+    https://github.com/jenellefeather/tfcochleagram
+
+Minor modifications have been made here to provide a single script
+containing all functions needed to build the cochlear model used
+in this project.
+"""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
