@@ -1,7 +1,7 @@
 <a name="top"></a>
 
 # Speech Denoising with Auditory Models ([arXiv](https://arxiv.org/abs/2011.10706), [sound examples](https://mcdermottlab.mit.edu/deep_feature_denoising/demo.html)
-This is a Tensorflow implementation of our [Speech Denoising with Auditory Models](https://arxiv.org/abs/2011.10706).
+This is a TensorFlow implementation of our [Speech Denoising with Auditory Models](https://arxiv.org/abs/2011.10706).
 
 Contact: [Mark Saddler](mailto:msaddler@mit.edu) or [Andrew Francl](mailto:francl@mit.edu)
 
@@ -25,8 +25,8 @@ Download models directory: [checkpoints for audio_transforms and recognition_net
 
 ### Quick start
 
-We provide a jupyter notebook that walk through usage of the model during testing and provides examples detailing how to denoise audio using our model. 
+We provide a jupyter notebook that walk-through usage of the model during testing and provides examples detailing how to denoise audio using our model. 
 
-Go to [Demo nNotebook](./DEMO.ipynb).
+Go to [Demo Notebook](./DEMO.ipynb).
 
 
