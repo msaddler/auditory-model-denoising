@@ -1,5 +1,5 @@
 <a name="top"></a>
-## Speech Denoising with Auditory Models ([arXiv](https://arxiv.org/abs/2011.10706), [audio examples](https://mcdermottlab.mit.edu/deep_feature_denoising/demo.html))
+## Speech Denoising with Auditory Models ([arXiv](https://arxiv.org/abs/2011.10706), [audio examples](https://mcdermottlab.mit.edu/denoising/demo.html))
 This is a TensorFlow implementation of our [Speech Denoising with Auditory Models](https://arxiv.org/abs/2011.10706).
 
 Contact: [Mark Saddler](mailto:msaddler@mit.edu) or [Andrew Francl](mailto:francl@mit.edu)
