@@ -7,7 +7,7 @@ Contact: [Mark Saddler](mailto:msaddler@mit.edu) or [Andrew Francl](mailto:franc
 <a name="citation"></a>
 ### Citation
 If you use our code for research, please cite our paper:
-Mark R. Saddler\*, Andrew Francl\*, Jenelle Feather, Kaizhi Qian, Yang Zhang, Josh H. McDermott. Deep Network Perceptual Losses for Speech Denoising. [arXiv:2011.10706](https://arxiv.org/abs/2011.10706). 2021.
+Mark R. Saddler\*, Andrew Francl\*, Jenelle Feather, Kaizhi Qian, Yang Zhang, Josh H. McDermott (2021). Speech Denoising with Auditory Models. *Proc. Interspeech* 2021, 2681-2685. [arXiv:2011.10706](https://arxiv.org/abs/2011.10706).
 
 <a name="license"></a>
 ### License
