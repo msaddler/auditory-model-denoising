@@ -14,7 +14,9 @@ class AuditoryModelLoss():
                  dir_recognition_networks='models/recognition_networks',
                  list_recognition_networks=None,
                  fn_weights='deep_feature_loss_weights.json',
-                 config_cochlear_model={}):
+                 config_cochlear_model={},
+                 tensor_wave0=None,
+                 tensor_wave1=None):
         """
         The AuditoryModelLoss class creates an object to measure distances between
         auditory model representations of sounds.
@@ -28,6 +30,8 @@ class AuditoryModelLoss():
         fn_weights (str): filename for deep feature loss weights, which weight the contribution
             of each recognition network layer to the total deep feature loss weight
         config_cochlear_model (dict): parameters for util_cochlear_model.build_cochlear_model
+        tensor_wave0 (tensor with shape [batch, 40000]): reference waveform tensor (for training)
+        tensor_wave1 (tensor with shape [batch, 40000]): denoised waveform tensor (for training)
         """
         if not os.path.isabs(fn_weights):
             fn_weights = os.path.join(dir_recognition_networks, fn_weights)
@@ -62,9 +66,12 @@ class AuditoryModelLoss():
             print('|__ {}: {}'.format(network_key, fn_ckpt))
         self.config_recognition_networks = config_recognition_networks
         self.config_cochlear_model = config_cochlear_model
+        self.tensor_wave0 = tensor_wave0
+        self.tensor_wave1 = tensor_wave1
         self.build_auditory_model()
         self.sess = None
         self.vars_loaded = False
+        return
 
 
     def l1_distance(self, feature0, feature1):
@@ -83,9 +90,10 @@ class AuditoryModelLoss():
         computed by measuring distances between identical stages of the two auditory
         models.
         """
-        # Build placeholders for two waveforms and compute waveform loss
-        self.tensor_wave0 = tf.placeholder(dtype, [None, 40000])
-        self.tensor_wave1 = tf.placeholder(dtype, [None, 40000])
+        # Build placeholders for two waveforms (if needed) and compute waveform loss
+        if (self.tensor_wave0 is None) or (self.tensor_wave1 is None):
+            self.tensor_wave0 = tf.placeholder(dtype, [None, 40000])
+            self.tensor_wave1 = tf.placeholder(dtype, [None, 40000])
         print('Building waveform loss')
         self.loss_waveform = self.l1_distance(self.tensor_wave0, self.tensor_wave1)
         # Build cochlear model for each waveform and compute cochlear model loss
