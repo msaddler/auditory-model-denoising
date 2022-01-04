@@ -25,4 +25,4 @@ We provide model checkpoints for all of our trained audio transforms and deep fe
 
 <a name="demo"></a>
 ### Quick Start
-We provide a [Jupyter notebook](./DEMO.ipynb) that (1) demos how to run our trained denoising models and (2) provides examples of how to compute the auditory model losses used to train the models.
+We provide a [Jupyter notebook](./DEMO.ipynb) that (1) demos how to run our trained denoising models and (2) provides examples of how to compute the auditory model losses used to train the models. A [second notebook](./DEMO_train_audio_transform.ipynb) demos how to train a new audio transform using the auditory model losses.
